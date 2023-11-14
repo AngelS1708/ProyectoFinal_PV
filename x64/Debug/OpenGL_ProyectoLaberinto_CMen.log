@@ -1,0 +1,7 @@
+﻿  main.cpp
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(329,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(330,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(351,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(358,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  OpenGL_ProyectoLaberinto_CMen.vcxproj -> C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\x64\Debug\OpenGL_ProyectoLaberinto_CMen.exe
