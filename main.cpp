@@ -7,6 +7,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include "reactphysics3d/reactphysics3d.h"
+
 #include <string>
 #include <vector>
 
@@ -14,10 +16,12 @@
 #include "Camera.h"
 #include "stb_image.h"
 #include "Model.h"
+#include "Debugger.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
 
 using namespace std;
 using namespace ImGui;
@@ -352,6 +356,42 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Model ourLamp, Shader ourLight)
 {
+	//Simular physicas
+	float timeStep = 1.0f / 30.0f;
+	double accumulator = 0.0f;
+
+	//Crear mundo
+	PhysicsCommon physicsCommon;
+	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
+
+	Vector3 pisoPos(0.0, 0.0 , 0.0);
+	Quaternion pisoOrient = Quaternion::identity();
+	Transform pisoTransf(pisoPos, pisoOrient);
+	RigidBody* piso = world->createRigidBody(pisoTransf);
+
+	piso->setType(BodyType::STATIC);
+
+	TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
+
+	// Add the triangle vertex array to the triangle mesh 
+	vector<Vertex> vertices = ourModel.meshes[1].vertices;
+
+	int numberMeshes = ourModel.meshes.size();
+
+	for (int i = 0; i < numberMeshes; i++)
+	{
+		int numberVertices = ourModel.meshes[i].vertices.size();
+	}
+	//triangleMesh->addSubpart(triangleArray);
+
+	// Create the concave mesh shape 
+	ConcaveMeshShape* concaveMesh = physicsCommon.createConcaveMeshShape(triangleMesh);
+
+	Shader debugShader("debugVertexShader.vs", "debugFragmentShader.fs");
+	Debugger deb(world);
+	deb.enableDebugRendering();
+
+
 	while (!glfwWindowShouldClose(window))
 	{
 		float currenTime = glfwGetTime();
