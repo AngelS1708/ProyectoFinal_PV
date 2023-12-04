@@ -1,13 +1,23 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
-
+#include "assimp/material.h"
+#include "assimp/material.inl"
 #include "Mesh.h"
 
+#include <string>
+#include <map>
+#include <vector>
+
 using namespace Assimp;
+using namespace std;
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
 
@@ -158,7 +168,7 @@ private:
         // specular: texture_specularN
         // normal: texture_normalN
 
-        Material mat = loadMaterial(material);
+        //Material mat = loadMaterial(material);
 
         // 1. diffuse maps
         vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
@@ -211,7 +221,7 @@ private:
         }
         return textures;
     }
-
+    /*
     Material loadMaterial(aiMaterial* mat)
     {
         Material material;
@@ -231,7 +241,7 @@ private:
         material.Shininess = shininess;
 
         return material;
-    }
+    }*/
 };
 
 

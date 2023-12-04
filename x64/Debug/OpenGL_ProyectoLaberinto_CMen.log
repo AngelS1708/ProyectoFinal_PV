@@ -1,7 +1,12 @@
 ﻿  main.cpp
-C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(329,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(330,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(351,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(358,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(407,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(408,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(429,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(457,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(464,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(464,24): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(465,42): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(465,25): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(540,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\main.cpp(561,19): warning C4244: 'initializing': conversion from 'double' to 'reactphysics3d::decimal', possible loss of data
   OpenGL_ProyectoLaberinto_CMen.vcxproj -> C:\Users\angel\source\repos\OpenGL_ProyectoLaberinto_CMen\x64\Debug\OpenGL_ProyectoLaberinto_CMen.exe
