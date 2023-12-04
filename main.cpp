@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "MyContactListener.h"
 #include "Shader.h"
 #include "Camera.h"
 #include "stb_image.h"
@@ -21,6 +22,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+#include "Objeto.h"
 
 
 using namespace std;
@@ -33,7 +36,7 @@ float deltaTime = 0.0f;
 float lastTime = 0.0f;
 
 //Camera camera(vec3(100.0f, 30.0f, 100.0f));
-Camera camera(vec3(5.0f, 10.0f, 5.0f));
+
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 bool firstMouse = true;
@@ -77,21 +80,23 @@ float materialShines = 8.0f;
 
 
 //La altura antes estaba en 8.084 xd
-vec3 posCubeLight[] = {vec3(0.0f, alturaLamp, 5.16f),
+vec3 posCubeLight[] = { vec3(0.0f, alturaLamp, 5.16f),
 						vec3(-15.0f, alturaLamp, 0.56f),
-						vec3(0.0f, alturaLamp, -5.16f ),
-						vec3(15.0f, alturaLamp, 0.56f )};
+						vec3(0.0f, alturaLamp, -5.16f),
+						vec3(15.0f, alturaLamp, 0.56f) };
 
 float circleRadius = 100.0f;
 float rotationSpeed = 45.0f;
+
+Camera camera(vec3(6.0f, 40.0f, 6.0f));
 
 void initGLFWVersion();
 bool gladLoad();
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Model ourLamp, Shader ourLight);
 
 void framebuffer_size_callback(GLFWwindow* window, int w, int h);
-void processInput(GLFWwindow* window);
-void CameraInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, PhysicsWorld* world, RigidBody* body);
+void CameraInput(GLFWwindow* window, PhysicsWorld* world, RigidBody* body);
 void Mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -138,6 +143,8 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_FRAMEBUFFER_SRGB);
+
 
 	iniGui(window);
 
@@ -147,13 +154,14 @@ int main()
 	Model ourMaze("Modelos/Laberinto1/Laberinto1.obj");
 	Shader ourLight("vertexLight.vs", "fragmentLight.fs");
 	Model ourLamp("Modelos/Lampara/cuboLampara.obj");
-	//Model ourLamp("Modelos/arbolMaincra/arbolMaincra.obj");
 
 	updateWindow(window, ourShader, ourMaze, ourLamp, ourLight);
 
 	destroyGui();
 
 	glfwTerminate();
+
+
 	return 0;
 }
 
@@ -185,7 +193,7 @@ void framebuffer_size_callback(GLFWwindow* window, int w, int h)
 
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window, PhysicsWorld* world, RigidBody* body)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -228,17 +236,17 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		camera.MovementSpeed = 7.0f;
+		camera.MovementSpeed = 9.0f;
 	}
 	else
 	{
-		camera.MovementSpeed = 3.5f;
+		camera.MovementSpeed = 5.0f;
 	}
 
-	CameraInput(window);
+	CameraInput(window, world, body);
 }
 
-void CameraInput(GLFWwindow* window)
+void CameraInput(GLFWwindow* window, PhysicsWorld* world, RigidBody* body)
 {
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
@@ -264,6 +272,7 @@ void CameraInput(GLFWwindow* window)
 	{
 		camera.ProcessKeyboard(UP, deltaTime);
 	}
+	/*
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !camera.isCameraDebugger && !isJumpKeyPressed)
 	{
 		isJumpKeyPressed = true;
@@ -289,7 +298,7 @@ void CameraInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE && !camera.isCameraDebugger)
 	{
 		isJumpKeyPressed = false;
-	}
+	}*/
 	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !isCameraMovementKeyPressed)
 	{
 		enableCameraMovement = !enableCameraMovement;
@@ -325,6 +334,72 @@ void CameraInput(GLFWwindow* window)
 	}
 }
 
+void ProcessBodyMovement(GLFWwindow* window, PhysicsWorld* world, RigidBody* body, float deltaTime)
+{
+	// Obtener la transformaci�n actual del cuerpo
+	Transform currentTransform = body->getTransform();
+	bool isJump = false;
+	// Velocidad de movimiento
+	float movementSpeed = 5.0f;
+	float jumpForce = 13.0f;
+
+	// Obtener la orientaci�n actual del cuerpo
+	Quaternion bodyOrientation = currentTransform.getOrientation();
+
+	// Calcular el desplazamiento en funci�n de las teclas presionadas
+	Vector3 displacement(0.0f, 0.0f, 0.0f);
+	
+	Quaternion newOrientation = Quaternion::identity();
+	Vector3 angle(0.0f, -radians(camera.Yaw), 0.0f);
+	newOrientation = Quaternion::fromEulerAngles(angle);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		displacement += newOrientation * Vector3(movementSpeed, 0.0f, 0.0f);
+		//displacement += horizontalFront * velocity;
+
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		displacement += newOrientation * Vector3(-movementSpeed, 0.0f, 0.0f);
+		
+		//displacement -= horizontalFront * velocity;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		displacement += newOrientation * Vector3(0.0f, 0.0f, -movementSpeed);
+		//displacement -= camera.Right * velocity;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		displacement += newOrientation * Vector3(0.0f, 0.0f, movementSpeed);
+		//displacement -= camera.Right * velocity;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || isJump == false)
+	{
+		isJump = true;
+		displacement += newOrientation * Vector3(0.0f, jumpForce, 0.0f);
+	}
+
+
+
+
+	//Calcular la nueva posici�n
+	Vector3 newPosition = currentTransform.getPosition() + displacement * deltaTime;
+
+	//cout << newPosition.x << ", " << newPosition.y << ", " << newPosition.z << endl;
+
+	Transform newTransform(newPosition, newOrientation);
+
+	
+	//newTransform = Transform::identity();
+
+	body->setTransform(newTransform); 
+	world->update(deltaTime);
+
+}
+
 void Mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
 	if (enableCameraMovement)
@@ -357,85 +432,192 @@ void Scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void updateWindow(GLFWwindow* window, Shader ourShader, Model ourModel, Model ourLamp, Shader ourLight)
 {
 	//Simular physicas
-	float timeStep = 1.0f / 30.0f;
+	float timeStep = 1.0f / 60.0f;
 	double accumulator = 0.0f;
-
+	Transform prevTransform;
+	Transform currTransform;
+	
 	//Crear mundo
 	PhysicsCommon physicsCommon;
 	PhysicsWorld* world = physicsCommon.createPhysicsWorld();
 
-	Vector3 pisoPos(0.0, 0.0 , 0.0);
+	//Creacion del laberinto
+	Vector3 pisoPos(0.0, 0.0, 0.0);
 	Quaternion pisoOrient = Quaternion::identity();
 	Transform pisoTransf(pisoPos, pisoOrient);
 	RigidBody* piso = world->createRigidBody(pisoTransf);
 
 	piso->setType(BodyType::STATIC);
 
+	pisoTransf = Transform::identity();
+	// Crear el TriangleMesh
 	TriangleMesh* triangleMesh = physicsCommon.createTriangleMesh();
-
-	// Add the triangle vertex array to the triangle mesh 
-	vector<Vertex> vertices = ourModel.meshes[1].vertices;
+	
 
 	int numberMeshes = ourModel.meshes.size();
 
-	for (int i = 0; i < numberMeshes; i++)
-	{
-		int numberVertices = ourModel.meshes[i].vertices.size();
-	}
-	//triangleMesh->addSubpart(triangleArray);
 
-	// Create the concave mesh shape 
+	for (int i = 0; i < numberMeshes; i++) {
+		
+		const vector<Vertex>& vertices = ourModel.meshes[i].vertices;
+		const vector<unsigned int>& indices = ourModel.meshes[i].indices;
+		const int nbVertices = vertices.size();
+		const int nbTriangles = indices.size() / 3;
+
+		float* vertexArray = new float[3 * nbVertices];
+		int* indexArray = new int[3 * nbTriangles];
+
+		for (int j = 0; j < nbVertices; j++) {
+			vertexArray[3 * j] = vertices[j].Position.x;
+			vertexArray[3 * j + 1] = vertices[j].Position.y;
+			vertexArray[3 * j + 2] = vertices[j].Position.z;
+		}
+
+		for (int j = 0; j < nbTriangles; j++) {
+			indexArray[3 * j] = indices[3 * j];
+			indexArray[3 * j + 1] = indices[3 * j + 1];
+			indexArray[3 * j + 2] = indices[3 * j + 2];
+		}
+
+		TriangleVertexArray* triangleArray =
+			new TriangleVertexArray(nbVertices, vertexArray, 3 * sizeof(float), nbTriangles,
+				indexArray, 3 * sizeof(int),
+				TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
+				TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE);
+		
+
+		triangleMesh->addSubpart(triangleArray);
+	}
+
+	// Crear el ConcaveMeshShape
 	ConcaveMeshShape* concaveMesh = physicsCommon.createConcaveMeshShape(triangleMesh);
+	Collider* pisoCollider = piso->addCollider(concaveMesh, pisoTransf);
+
+	//Creacion de un collider para la camara
+	Vector3 positionCameraCollider(camera.Position.x, camera.Position.y, camera.Position.z);
+	Quaternion orientation = Quaternion::identity();
+	Vector3 anguloInicial(0.0f, -radians(camera.Yaw), 0.0f);
+	orientation = Quaternion::fromEulerAngles(anguloInicial);
+	Transform transform(positionCameraCollider, orientation);
+	RigidBody* body = world->createRigidBody(transform);
+	body->setAngularLockAxisFactor(Vector3(0, 1, 0));
+
+
+	body->setType(BodyType::DYNAMIC);
+	body->setLinearDamping(1.25);
+	body->setAngularDamping(1.25);
+
+	const Vector3 halfExtents(0.5, 1.5, 0.5);
+	BoxShape* boxShape = physicsCommon.createBoxShape(halfExtents);
+	//CapsuleShape* capsuleShape = physicsCommon.createCapsuleShape(1.0, 2.0);
+	prevTransform = transform;
+	transform = Transform::identity();
+	//Collider* collider = body->addCollider(capsuleShape, transform);
+	Collider* collider = body->addCollider(boxShape, transform);
+
+	Vector3 piso2Pos(0.0, 0.0, 0.0);
+	Quaternion piso2Orient = Quaternion::identity();
+	Transform piso2Transf(piso2Pos, pisoOrient);
+	RigidBody* piso2 = world->createRigidBody(piso2Transf);
+
+	piso2->setType(BodyType::STATIC);
+	Vector3 pisoHalfExt(80.0, 8.0, 80.0);
+	BoxShape* pisoBox = physicsCommon.createBoxShape(pisoHalfExt);
+	Collider* piso2Collider = piso2->addCollider(pisoBox, piso2Transf);
+
 
 	Shader debugShader("debugVertexShader.vs", "debugFragmentShader.fs");
 	Debugger deb(world);
 	deb.enableDebugRendering();
 
+	MyContactListener listener;
+	listener.setBodies(body, piso2);
+	world->setEventListener(&listener);
+	
 
 	while (!glfwWindowShouldClose(window))
 	{
 		float currenTime = glfwGetTime();
 		deltaTime = currenTime - lastTime;
 		lastTime = currenTime;
+		accumulator += deltaTime;
 
+		processInput(window, world, body);
+		camera.updateCamera(window, body, world, deltaTime, listener.isInContact);
+		//ProcessBodyMovement(window, world, body, deltaTime);
+		if (accumulator >= timeStep)
+		{
+
+			glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+			//glClearColor(0.12f, 0.46f, 0.76f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			//Calculos de las f�sicas
+			while (accumulator >= timeStep)
+			{
+				world->update(timeStep);
+				accumulator -= timeStep;
+			}
+			decimal factor = accumulator / timeStep;
+			currTransform = body->getTransform();
+			Transform interTransform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
+			prevTransform = currTransform;
+
+
+
+			ourShader.use();
+			ourShader.setInt("material.diffuse", 0);
+			ourShader.setInt("material.specular", 1);
+			ourShader.setFloat("material.shininess", materialShines);
+			TransformCamera(ourShader);
+			directionalLight(ourShader);
+			pointLight(ourShader, 4);
+			flashLight(ourShader);
+			TransformModel(ourShader);
+			ourModel.Draw(ourShader);
+
+			ourLight.use();
+			ourLight.setVec3("aColor", colorL);
+			ourLight.setFloat("material.shininess", materialShines);
+			ourLight.setInt("texture_diffuse1", 0);
+			TransformCamera(ourLight);
+			TransformLight(ourLight, ourLamp);
+
+			debugShader.use();
+			TransformCamera(debugShader);
+			deb.drawColliders();
+
+			glfwSwapBuffers(window);
+		}
+
+		glfwPollEvents();
+	
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
 		showFPS();
 
-		processInput(window);
-
-		showWindowTest();
-
-		//glClearColor(0.5f, 0.3f, 0.7f, 1.0f);
-		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		ourShader.use();
-		ourShader.setInt("material.diffuse", 0);
-		ourShader.setInt("material.specular", 1);
-		ourShader.setFloat("material.shininess", materialShines);
-		TransformCamera(ourShader);
-		directionalLight(ourShader);
-		pointLight(ourShader,4);
-		flashLight(ourShader);
-		TransformModel(ourShader);
-		ourModel.Draw(ourShader);
-
-		ourLight.use();
-		ourLight.setVec3("aColor", colorL);
-		ourLight.setFloat("material.shininess", materialShines);
-		ourLight.setInt("texture_diffuse1",0);
-		TransformCamera(ourLight);
-		TransformLight(ourLight, ourLamp);
+		//showWindowTest();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
 	}
+
+	//world->destroyCollisionBody(body);
+	world->destroyRigidBody(body);
+	//world->destroyCollisionBody(piso);
+	world->destroyRigidBody(piso);
+	world->destroyRigidBody(piso2);
+	
+	physicsCommon.destroyConcaveMeshShape(concaveMesh);
+	//physicsCommon.destroyConvexMeshShape(convexMeshS)
+	physicsCommon.destroyBoxShape(boxShape);
+	//physicsCommon.destroyCapsuleShape(capsuleShape);
+	physicsCommon.destroyTriangleMesh(triangleMesh);
+	physicsCommon.destroyPhysicsWorld(world);
+	
 }
 
 void TransformCamera(Shader ourShader)
@@ -501,7 +683,7 @@ void pointLight(Shader ourShader, int n)
 		ourShader.setFloat("pointLights[" + to_string(i) + "].linear", linearP);
 		ourShader.setFloat("pointLights[" + to_string(i) + "].quadratic", cuadraticP);
 	}
-	
+
 }
 
 void directionalLight(Shader ourShader)
@@ -557,7 +739,7 @@ void showWindowTest()
 		ImGui::Begin("Window Test", &windowTest);
 
 		ImGui::Text("Character Position");
-		ImGui::InputFloat("x",&camera.Position.x);
+		ImGui::InputFloat("x", &camera.Position.x);
 		ImGui::InputFloat("y", &camera.Position.y);
 		ImGui::InputFloat("z", &camera.Position.z);
 		ImGui::Text("Material Shiness");
@@ -621,7 +803,6 @@ void iniGui(GLFWwindow* window)
 	style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // Texto en blanco
 	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.2f, 0.2f, 0.7f); // Fondo de las ventanas
 	style.Colors[ImGuiCol_FrameBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.6f); // Fondo de los elementos
-
 
 	ImGui::StyleColorsDark();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls

@@ -144,6 +144,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Objeto.cpp" />
     <ClCompile Include="stbImg.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,8 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="MyContactListener.h" />
+    <ClInclude Include="Objeto.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>

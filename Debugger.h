@@ -18,6 +18,7 @@ public:
     {
         this->world = world;
         this->debugRenderer = &(this->world->getDebugRenderer());
+
     }
 
     ~Debugger()
@@ -44,9 +45,11 @@ public:
         const PhysicsWorld& temp = *world;
         this->debugRenderer->computeDebugRenderingPrimitives(temp);
         uint32 size = this->debugRenderer->getNbTriangles();
-        uint32 nVertices = size * 3;
-        Array<DebugRenderer::DebugTriangle> triArray = this->debugRenderer->getTriangles();
 
+        uint32 nVertices = size * 3;
+
+        Array<DebugRenderer::DebugTriangle> triArray = this->debugRenderer->getTriangles();
+        
         uint32 left = nVertices % this->bufferSize;
         uint32 index = 0;
         bool justStarted = true;
@@ -58,6 +61,8 @@ public:
         for (uint32 i = 0; i < size; i++)
         {
             index = (i * 3) % this->bufferSize;
+
+
             if (index == 0 && !justStarted)
             {
                 updateBuffer(this->VBO, 0, this->debugVertices, sizeof(DebugVertex) * this->bufferSize, GL_ARRAY_BUFFER);
@@ -65,7 +70,7 @@ public:
 
             }
             else justStarted = false;
-
+            
             this->debugVertices[index].pos[0] = triArray[i].point1.x;
             this->debugVertices[index].pos[1] = triArray[i].point1.y;
             this->debugVertices[index].pos[2] = triArray[i].point1.z;
@@ -99,8 +104,8 @@ public:
 
 private:
 	unsigned int VAO = 0, VBO = 0;
-    const uint bufferSize = 1200;
-    DebugVertex debugVertices[1200];
+    const uint bufferSize = 36000;
+    DebugVertex debugVertices[36000];
     
     PhysicsWorld* world;
     DebugRenderer* debugRenderer;
@@ -129,6 +134,8 @@ private:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+
+
 };
 
 #endif
